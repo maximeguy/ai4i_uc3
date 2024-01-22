@@ -1,13 +1,18 @@
+import os
+import imageio as iio
 import numpy as np
 import matplotlib.pyplot as plt
-import imageio as iio
-import lib.distance as dist
-import lib.color_space
-import lib.histogram as hist
 
-def main():
-    # Init variables here, no globals !
-    pass
+IMGS_STUDIO = []
+IMGS_REPORT = []
 
-if __name__ == "__main__":
-    main()
+def load_imgs(path, imgs):
+    for filename in os.listdir(path):
+        print(filename)
+        if filename.endswith((".png", ".jpg", ".jpeg", ".gif")):
+            file_path = os.path.join(path, filename)
+            img = iio.imread(file_path)
+            imgs.append(img)
+
+load_imgs("img/studio", IMGS_STUDIO)
+load_imgs("img/report", IMGS_REPORT)
