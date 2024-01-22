@@ -18,3 +18,4 @@ for filename in os.listdir(folder_path + "report"):
         file_path = os.path.join(folder_path, filename)
         img = iio.imread(file_path)
         imgs_report.append(img)
+
