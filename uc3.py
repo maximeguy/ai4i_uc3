@@ -7,6 +7,7 @@ import lib.histogram as hist
 
 def main():
     # Init variables here, no globals !
+    pass
 
 if __name__ == "__main__":
     main()
