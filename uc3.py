@@ -8,7 +8,6 @@ IMGS_REPORT = []
 
 def load_imgs(path, imgs):
     for filename in os.listdir(path):
-        print(filename)
         if filename.endswith((".png", ".jpg", ".jpeg", ".gif")):
             file_path = os.path.join(path, filename)
             img = iio.imread(file_path)

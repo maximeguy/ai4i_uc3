@@ -20,9 +20,22 @@ def compute_bins_count(method:str, n:int):
     print(f"Computed bins_count with {method} method for {n} elements): ",int(bins_count))
     return int(bins_count)
 
-def compute_bins_edges(bins_count:int, range_x, range_y):
-    step_x = (range_x[1]- range_x[0])/bins_count
-    step_y = (range_y[1]- range_y[0])/bins_count
-    bins_edges_x = np.arange(range_x[0], range_x[1]+step_x, step_x)
-    bins_edges_y = np.arange(range_y[0], range_y[1]+step_y, step_y)
-    return np.asarray([bins_edges_x,bins_edges_y], dtype=np.float64)
+def compute_bins_edges(bins_count: int, components_ranges):
+    """Compute the number of bins from the selected method for n elements
+
+    Args:
+        bins_count (int): Number of histogram bins
+        component_range (np.ndarray): Value range of a component
+
+    Returns:
+        np.ndarray: Array of edges of each histogram bin
+    """
+    if len(components_ranges.shape) == 1:
+        step = (components_ranges[1] - components_ranges[0]) / (bins_count)
+        bins_edges = np.arange(components_ranges[0], components_ranges[1] + step, step)
+    else:
+        bins_edges = np.zeros((len(components_ranges), bins_count + 1), dtype=int)
+        for i, cr in enumerate(components_ranges):
+            step = (cr[1] - cr[0]) / (bins_count)
+            bins_edges[i] = np.arange(cr[0], cr[1] + step, step)
+    return bins_edges
