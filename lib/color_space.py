@@ -1,4 +1,5 @@
 import numpy as np
+import colour
 
 def rgb_to_lab(img):
     """Convert RGB images to Lab and cast values as int
