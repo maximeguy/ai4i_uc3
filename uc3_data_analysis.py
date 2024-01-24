@@ -3,46 +3,21 @@ import matplotlib.pyplot as plt
 
 # import colour
 from uc3 import IMGS_REPORT, IMGS_STUDIO
+from scipy.stats import skew, kurtosis
 from lib.histogram import compute_bins_count
 
 imgs_studio = np.array(IMGS_STUDIO, dtype=object)
 imgs_report = np.array(IMGS_REPORT, dtype=object)
 
-# imgs_studio_hsv = np.empty(imgs_studio.shape, dtype=object)
-# imgs_report_hsv = np.empty(imgs_report.shape, dtype=object)
 
-# for i, img in enumerate(imgs_studio):
-#     if len(img.shape) == 2:
-#         # Components correction
-#         img_rgb = np.empty((img.shape[0], img.shape[1], 3))
-#         img_rgb[:, :, 0] = img
-#         img_rgb[:, :, 1] = img
-#         img_rgb[:, :, 2] = img
-#         img = img_rgb
-#     imgs_studio_hsv[i] = colour.RGB_to_HSV(img)
-# for i, img in enumerate(imgs_report):
-#     if len(img.shape) == 2:
-#         # Components correction
-#         img_rgb = np.empty((img.shape[0], img.shape[1], 3))
-#         img_rgb[:, :, 0] = img
-#         img_rgb[:, :, 1] = img
-#         img_rgb[:, :, 2] = img
-#         img = img_rgb
-#     imgs_report_hsv[i] = colour.RGB_to_HSV(img)
-
-# # Extract the RGB pixel values from each image and store them in a list
-# pixel_values_studio = [img.reshape(-1, 3) for img in imgs_studio]
-# pixel_values_studio = np.vstack(pixel_values_studio)
-
-# pixel_values_report = [img.reshape(-1, 3) for img in imgs_report]
-# pixel_values_report = np.vstack(pixel_values_report)
-
-# # Extract the HSV pixel values from each image and store them in a list
-# pixel_values_studio_hsv = [img.reshape(-1, 3) for img in imgs_studio_hsv]
-# pixel_values_studio_hsv = np.vstack(pixel_values_studio_hsv)
-
-# pixel_values_report_hsv = [img.reshape(-1, 3) for img in imgs_report_hsv]
-# pixel_values_report_hsv = np.vstack(pixel_values_report_hsv)
+def correct_components(img):
+    # Components correction
+    print("Components correction")
+    img_rgb = np.empty((img.shape[0], img.shape[1], 3))
+    img_rgb[:, :, 0] = img
+    img_rgb[:, :, 1] = img
+    img_rgb[:, :, 2] = img
+    return img_rgb
 
 
 def stack_images(imgs_origin):
@@ -50,12 +25,7 @@ def stack_images(imgs_origin):
 
     for img in imgs:
         if len(img.shape) == 2:
-            # Components correction
-            img_rgb = np.empty((img.shape[0], img.shape[1], 3))
-            img_rgb[:, :, 0] = img
-            img_rgb[:, :, 1] = img
-            img_rgb[:, :, 2] = img
-            img = img_rgb
+            img = correct_components(img)
 
     # Extract the RGB pixel values from each image and store them in a list
     pixel_values = [img.reshape(-1, 3) for img in imgs]
@@ -80,7 +50,92 @@ def components_histograms(pixels, color_space: str, img_class: str):
     plt.show()
 
 
-imgs_studio_stacked = stack_images(IMGS_STUDIO)
-imgs_report_stacked = stack_images(IMGS_REPORT)
-components_histograms(imgs_studio_stacked, "RGB", "studio")
-components_histograms(imgs_report_stacked, "RGB", "report")
+def histograms(image: np.array):
+    h, w = image.shape[:2]
+    bins_count = compute_bins_count("sturges", h * w)
+    r_reshaped = image[:, :, 0].reshape((h * w))
+    g_reshaped = image[:, :, 1].reshape((h * w))
+    b_reshaped = image[:, :, 2].reshape((h * w))
+    histo_red, bins = np.histogram(r_reshaped, bins=bins_count)
+    histo_green, _ = np.histogram(g_reshaped, bins=bins_count)
+    histo_blue, _ = np.histogram(b_reshaped, bins=bins_count)
+    return histo_red, histo_green, histo_blue, bins
+
+
+def image_components_histograms(img, bins_count):
+    if len(img.shape) != 3 or img.shape[2] != 3:
+        raise ValueError("Input img should be a 3D RGB image (height, width, 3)")
+
+    img_reshaped = img.reshape(img.shape[0] * img.shape[1], img.shape[2])
+    print(img.shape, img_reshaped.shape)
+    hists = []
+    for i in range(3):
+        channel_hist = np.histogram(img_reshaped[:, i], bins=bins_count, density=True)[
+            0
+        ]
+        hists.append(channel_hist)
+    return hists
+
+
+def histograms(image: np.array):
+    h, w = image.shape[:2]
+    bins_count = compute_bins_count("sturges", h * w)
+    r_reshaped = image[:, :, 0].reshape((h * w))
+    g_reshaped = image[:, :, 1].reshape((h * w))
+    b_reshaped = image[:, :, 2].reshape((h * w))
+    histo_red, bins = np.histogram(r_reshaped, bins=bins_count)
+    histo_green, _ = np.histogram(g_reshaped, bins=bins_count)
+    histo_blue, _ = np.histogram(b_reshaped, bins=bins_count)
+    return histo_red, histo_green, histo_blue, bins
+
+
+def extract_hist_features(hist):
+    # Compute the mean
+    mean = np.mean(hist)
+
+    # Compute the median
+    sorted_hist = np.sort(hist.flatten())
+    median = np.median(sorted_hist)
+
+    # Compute the standard deviation
+    std_dev = np.std(hist)
+
+    # Compute percentiles (e.g., 25th and 75th percentiles)
+    percentile_25 = np.percentile(sorted_hist, 25)
+    percentile_75 = np.percentile(sorted_hist, 75)
+
+    mode = np.argmax(hist)
+
+    entropy = -np.sum(
+        hist * np.log2(hist + 1e-10)
+    )  # Add a small constant to avoid log(0)
+
+    variance = np.var(hist)
+
+    features = [
+        mean,
+        median,
+        std_dev,
+        percentile_25,
+        percentile_75,
+        mode,
+        skew(hist),
+        kurtosis(hist),
+        entropy,
+        variance,
+    ]
+
+    print(features.shape)
+    return features
+
+
+for i in imgs_studio:
+    img = imgs_studio[i]
+    if len(img.shape) != 3 or img.shape[2] != 3:
+        img = correct_components(img)
+
+    hists = image_components_histograms(img, 18)
+
+    features = np.zeros((3), dtype=object)
+    for hist in hists:
+        np.append(features, extract_hist_features(hist))
