@@ -10,7 +10,7 @@ def load_imgs(path, imgs):
     for filename in os.listdir(path):
         if filename.endswith((".png", ".jpg", ".jpeg", ".gif")):
             file_path = os.path.join(path, filename)
-            img = iio.imread(file_path)
+            img = iio.imread(file_path).astype(np.uint8)
             imgs.append(img)
 
 load_imgs("img/studio", IMGS_STUDIO)
