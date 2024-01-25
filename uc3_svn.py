@@ -46,7 +46,7 @@ labels = np.zeros(len(imgs_studio) * 2)
 labels[len(imgs_studio) :] = 1
 
 hists = np.concatenate([hists_studio, hists_report])
-print(hists)
+
 features = np.zeros((len(hists), 5))
 for i, hist in enumerate(hists):
     # Compute the mean
@@ -64,7 +64,7 @@ for i, hist in enumerate(hists):
     percentile_75 = np.percentile(sorted_hist, 75)
 
     features[i] = [mean, median, std_dev, percentile_25, percentile_75]
-print(features)
+
 # imgs = np.concatenate([imgs_studio, imgs_report])
 # for i,img in enumerate(imgs):
 #     print(img.shape, labels[i])
